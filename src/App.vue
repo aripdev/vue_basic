@@ -1,31 +1,59 @@
 <script setup>
-// This starter template is using Vue 3 <script setup> SFCs
-// Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
-import HelloWorld from './components/HelloWorld.vue'
+import UserIndex from "./components/User/Index.vue";
+import UserCreate from "./components/User/Create.vue";
+import Modal from "./components/Layouts/Modal.vue";
+import { onMounted, ref } from "vue";
+import server from "./server.js";
+import Notification from "./components/Layouts/Notification.vue";
+
+const listModal = ref({
+  addUser: false,
+});
+
+const users = ref(null);
+
+const configuration = ref({
+  notif: false,
+  notifMessage: "",
+});
+
+function modalAction(component, action) {
+  listModal.value[component] = action;
+}
+
+function loadUserData(page, limit) {
+  server.getAllUser(page, limit).then((r) => {
+    users.value = r.data;
+  });
+}
+
+function notifAction(action, message = "") {
+  configuration.value.notif = action;
+  configuration.value.notifMessage = message;
+}
+onMounted(() => {
+  loadUserData();
+});
 </script>
-
 <template>
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="Vite + Vue" />
+  <Notification
+    @notifAction="notifAction"
+    :see="configuration.notif"
+    :message="configuration.notifMessage"
+  ></Notification>
+  <UserIndex
+    :users="users"
+    @addUser="modalAction"
+    @refresh="loadUserData"
+    @notifAction="notifAction"
+  ></UserIndex>
+  <Modal @modalAction="modalAction" name="addUser" :open="listModal.addUser">
+    <template #body>
+      <UserCreate
+        @refresh="loadUserData"
+        @modalAction="modalAction"
+        @notifAction="notifAction"
+      ></UserCreate>
+    </template>
+  </Modal>
 </template>
-
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>

@@ -1,0 +1,46 @@
+{
+  "users": [
+    {
+      "name": "John Doe",
+      "title": "enginer",
+      "email": "john@mail.com",
+      "role": "team",
+      "id": 1
+    },
+    {
+      "name": "Marco Downs",
+      "title": "enginer",
+      "email": "downmarco@mail.com",
+      "role": "member",
+      "id": 2
+    },
+    {
+      "name": "Jane Doe",
+      "title": "doctor",
+      "email": "jane@mail.com",
+      "role": "member",
+      "id": 3
+    },
+    {
+      "name": "Melanie Zen",
+      "title": "doctor",
+      "email": "melan897@mail.com",
+      "role": "member",
+      "id": 4
+    },
+    {
+      "name": "Marko Loris",
+      "title": "Teacher",
+      "email": "marko@mail.com",
+      "role": "admin",
+      "id": 5
+    },
+    {
+      "name": "Deni Jacob",
+      "title": "Magician",
+      "email": "deni@mail.com",
+      "role": "admin",
+      "id": 6
+    }
+  ]
+}
