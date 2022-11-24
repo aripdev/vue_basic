@@ -231,14 +231,14 @@ const users = ref({
 
 const roles = ref(["member", "team", "admin"]);
 
-const emit = defineEmits(["modalAction", "refresh", "notifAction"]);
+const emit = defineEmits(["modalAction", "refresh", "notification"]);
 
 function saveUser() {
   server.addingUser(users.value).then((r) => {
     if (r.status == 201) {
       emit("modalAction", "addUser", false);
       emit("refresh");
-      emit("notifAction", true, "Success add new user");
+      emit("notification", "Success add new user");
     }
   });
 }

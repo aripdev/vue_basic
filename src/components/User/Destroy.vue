@@ -87,6 +87,7 @@
 </template>
 
 <script setup>
+import { DialogTitle } from "@headlessui/vue";
 import { ExclamationTriangleIcon } from "@heroicons/vue/24/outline";
 import server from "../../server";
 const emit = defineEmits(["refresh", "modalAction", "notification"]);

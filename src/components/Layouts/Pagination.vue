@@ -33,7 +33,7 @@
           'text-gray-300': !configuration.prev,
           'hover:bg-gray-50': configuration.prev,
         }"
-        @click="prev"
+        @click.prevent="prev"
       >
         Previous
       </a>
@@ -59,7 +59,7 @@
           'text-gray-300': !configuration.next,
           'hover:bg-gray-50': configuration.next,
         }"
-        @click="next"
+        @click.prevent="next"
       >
         Next
       </a>
@@ -79,7 +79,7 @@
           {{ " " }}
           of
           {{ " " }}
-          <span class="font-medium">{{ configuration.total }}</span>
+          <span class="font-medium">{{ props.total }}</span>
           {{ " " }}
           results
         </p>
@@ -109,7 +109,7 @@
               'disabled-button': !configuration.prev,
               'hover:bg-gray-50': configuration.prev,
             }"
-            @click="prev"
+            @click.prevent="prev"
           >
             <span class="sr-only">Previous</span>
             <ChevronLeftIcon
@@ -119,13 +119,13 @@
             />
           </a>
           <!-- Current: "z-10 bg-indigo-50 border-indigo-500 text-indigo-600", Default: "bg-white border-gray-300 text-gray-500 hover:bg-gray-50" -->
-          <div v-for="pages in numPages" :key="pages">
+          <div v-for="pages in configuration.numPages" :key="pages">
             <a
               href="#"
               aria-current="page"
               :class="{
                 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600':
-                  pages == configuration.current,
+                  pages == props.current,
               }"
               class="
                 relative
@@ -137,7 +137,7 @@
                 text-sm
                 font-medium
               "
-              @click="changePage(pages)"
+              @click.prevent="changePage(pages)"
             >
               {{ pages }}
             </a>
@@ -162,7 +162,7 @@
               'disabled-button': !configuration.next,
               'hover:bg-gray-50': configuration.next,
             }"
-            @click="next"
+            @click.prevent="next"
           >
             <span class="sr-only">Next</span>
             <ChevronRightIcon
@@ -181,10 +181,16 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/vue/24/outline";
 import { onMounted, ref, watchEffect } from "vue";
 
+const emit = defineEmits(["pageAction", "navAction"]);
+
+const props = defineProps({
+  total: Number,
+  limit: Number,
+  current: Number,
+});
+
 const configuration = ref({
-  total: 11,
-  adjacent: 3,
-  current: 1,
+  numPages: [],
   range: 4,
   next: true,
   prev: true,
@@ -195,44 +201,30 @@ const infoPages = ref({
   end: 0,
 });
 
-const numPages = doPaging(configuration.value.current, {
-  range: configuration.value.range,
-  pages: Math.ceil(configuration.value.total / configuration.value.adjacent),
-});
-
-function infoPagesStart() {
-  if (configuration.value.current > 1) {
-    infoPages.value.start =
-      (configuration.value.current - 1) * configuration.value.adjacent + 1;
-  } else {
-    infoPages.value.start = 1;
-  }
-}
-
-function infoPagesTo() {
-  const x = infoPages.value.start - 1 + configuration.value.adjacent;
-
-  if (configuration.value.total > x) {
-    infoPages.value.end = x;
-  } else {
-    infoPages.value.end = configuration.value.total;
-  }
-}
-
 function prev() {
   if (configuration.value.prev) {
-    configuration.value.current -= 1;
-    changePage(configuration.value.current);
+    emit("navAction", "prev");
   }
 }
 function next() {
   if (configuration.value.next) {
-    configuration.value.current += 1;
-    changePage(configuration.value.current);
+    emit("navAction", "next");
   }
 }
 
-function loadConfiguration() {}
+function loadShowNumberConfiguration() {
+  // Defining show start number
+
+  const _current = parseInt(props.current);
+
+  infoPages.value.start = _current > 1 ? (_current - 1) * props.limit + 1 : 1;
+
+  // Define showing to number
+
+  const _startPage = parseInt(infoPages.value.start - 1 + props.limit);
+
+  infoPages.value.end = props.total > _startPage ? _startPage : props.total;
+}
 
 function doPaging(current, { range, pages, start = 1 }) {
   const paging = [];
@@ -243,40 +235,38 @@ function doPaging(current, { range, pages, start = 1 }) {
   const end = i + range;
   while (i < end) {
     if (i > 0) {
-      paging.push(`${i++}`);
-    } else {
-      i++;
+      paging.push(i);
     }
+    i++;
   }
   return paging;
 }
 
-function changePage(page) {
-  configuration.value.current = parseInt(page);
-  infoPagesStart();
-  infoPagesTo();
+function setPagination() {
+  configuration.value.numPages = doPaging(props.current, {
+    range: configuration.value.range,
+    pages: Math.ceil(props.total / props.limit),
+  });
 }
 
-onMounted(() => {
-  infoPagesStart();
-  infoPagesTo();
-});
+function changePage(page) {
+  emit("pageAction", parseInt(page));
+}
 
 watchEffect(() => {
-  if (configuration.value.current) {
-    const current = configuration.value.current;
+  const current = props.current;
 
-    if (current == 1) {
-      configuration.value.prev = false;
-    } else {
-      configuration.value.prev = true;
-    }
+  if (current) {
+    loadShowNumberConfiguration();
 
-    if (numPages.length == current) {
-      configuration.value.next = false;
-    } else {
-      configuration.value.next = true;
-    }
+    setPagination();
+
+    configuration.value.prev = current != 1;
+
+    const _numPages = configuration.value.numPages;
+
+    configuration.value.next =
+      _numPages.length == 1 ? false : _numPages.length != current;
   }
 });
 </script>
