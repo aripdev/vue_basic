@@ -211,19 +211,70 @@
           </select>
         </div>
       </div>
+
+      <!-- Filter View -->
+
+      <div class="col-start-2 col-span-5 mt-2">
+        <div class="flex gap-2">
+          <div
+            class="bg-gray-200 rounded-3xl py-1 px-2 flex content-baseline"
+            v-for="filter in filterView"
+            :key="filter.action"
+          >
+            <span class="text-sm text-gray-600">{{ filter.query }}</span>
+            <button class="ml-1"><XMarkIcon class="w-5 h-5" /></button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="md:grid md:grid-cols-6">
       <!-- Filter by Role -->
 
-      <div class="mt-4">
-        <h1>Filter</h1>
+      <div class="mt-2">
+        <div>
+          <label class="text-lg font-bold text-gray-700 flex space-x-2">
+            <AdjustmentsHorizontalIcon class="w-6 h-6" />
+            <span>Roles</span></label
+          >
+
+          <fieldset class="mt-4 ml-6">
+            <div class="space-y-4">
+              <div
+                v-for="role in rolesAvail"
+                :key="role.id"
+                class="flex items-center"
+              >
+                <input
+                  :id="role.id"
+                  name="notification-method"
+                  type="radio"
+                  :checked="role.id == selectedFilter.roles"
+                  class="
+                    focus:ring-indigo-500
+                    h-4
+                    w-4
+                    text-indigo-600
+                    border-gray-300
+                  "
+                  @change.prevent="filterAdd('roles', role.title)"
+                />
+                <label
+                  :for="role.id"
+                  class="ml-3 block text-sm font-medium text-gray-700"
+                >
+                  {{ role.title }}
+                </label>
+              </div>
+            </div>
+          </fieldset>
+        </div>
       </div>
 
       <!-- List Users -->
       <div
         class="
-          mt-4
+          mt-2
           overflow-hidden
           shadow
           ring-1 ring-black ring-opacity-5
@@ -448,10 +499,12 @@ import Pagination from "../Layouts/Pagination.vue";
 import server from "../../server";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/vue";
 import {
+  XMarkIcon,
   XCircleIcon,
   PencilSquareIcon,
   ChevronDownIcon,
   MagnifyingGlassIcon,
+  AdjustmentsHorizontalIcon,
 } from "@heroicons/vue/24/outline";
 
 const users = ref({
@@ -472,6 +525,12 @@ const sortOptions = [
   { name: "Role", href: "#" },
 ];
 
+const rolesAvail = [
+  { id: "team", title: "Team" },
+  { id: "member", title: "Member" },
+  { id: "admin", title: "Admin" },
+];
+
 const emit = defineEmits(["notifAction"]);
 
 const selectedPerson = ref();
@@ -480,6 +539,51 @@ const listModal = ref({
   editUser: false,
   addUser: false,
 });
+const selectedFilter = ref({
+  search: "",
+  sorting: "",
+  roles: "",
+});
+const filterView = ref([
+  { action: "search", query: "john" },
+  { action: "sorting", query: "newest" },
+]);
+
+function filterAdd(action, query) {
+  if (action == "roles") {
+    const findKey = filterFinder(action);
+    if (findKey) {
+      filterView.value[findKey]["query"] = query;
+    } else {
+      filterView.value.push({ action: action, query: query });
+    }
+
+    selectedFilter.value.roles = query.toLowerCase();
+  }
+}
+
+function filterFinder(key) {
+  if (filterView.value.length) {
+    const _finded = false;
+    for (var x = 0; x < filterView.value.length; x++) {
+      if (filterView.value[x]["action"] == key) {
+        return x;
+      }
+    }
+    return _finded;
+  }
+}
+
+function rolesSelected() {
+  const key = filterFinder("roles");
+
+  if (key) {
+    return filterView.value[key]["query"];
+  }
+
+  return "team";
+}
+
 function actionId(person, action) {
   selectedPerson.value = person;
   if (action == "delete") {

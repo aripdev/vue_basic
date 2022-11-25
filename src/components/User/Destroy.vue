@@ -97,8 +97,9 @@ const props = defineProps({
 
 function deleteUser() {
   emit("modalAction", "destroyUser", false);
-  emit("notification", "User deleted");
-  server.deleteUser(props.person.id);
-  emit("refresh");
+  server.deleteUser(props.person.id).then((r) => {
+    emit("notification", "User deleted");
+    emit("refresh");
+  });
 }
 </script>
