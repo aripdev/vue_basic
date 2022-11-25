@@ -41,6 +41,13 @@
       "email": "deni@mail.com",
       "role": "admin",
       "id": 6
+    },
+    {
+      "name": "Jessica Alca",
+      "title": "Actress",
+      "email": "jessica@mail.com",
+      "role": "team",
+      "id": 7
     }
   ]
 }

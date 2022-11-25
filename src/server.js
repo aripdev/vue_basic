@@ -11,6 +11,9 @@ export default {
     getAllUser(page = 1, limit = 2) {
         return apiClient.get(`users?_page=${page}&_limit=${limit}`)
     },
+    getUsers(query) {
+        return apiClient.get(`users?${query}`);
+    },
     addingUser(data) {
         return apiClient.post('users', data)
     },

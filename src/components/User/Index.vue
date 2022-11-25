@@ -45,7 +45,10 @@
 
       <div class="col-start-2 col-span-2">
         <div class="flex-1 flex">
-          <form class="w-full flex md:ml-0" action="#" method="GET">
+          <form
+            class="w-full flex md:ml-0"
+            @submit.prevent="filterAdd('search', selectedFilter.search)"
+          >
             <label for="search-field" class="sr-only">Search</label>
             <div
               class="relative w-full text-gray-400 focus-within:text-gray-600"
@@ -84,6 +87,7 @@
                 placeholder="Search"
                 type="search"
                 name="search"
+                v-model="selectedFilter.search"
               />
             </div>
             <button
@@ -108,6 +112,7 @@
                 focus:ring-offset-2
                 focus:ring-indigo-500
               "
+              @click.prevent="filterAdd('search', selectedFilter.search)"
             >
               Find
             </button>
@@ -116,7 +121,7 @@
       </div>
       <!-- Navigation Data -->
 
-      <div class="col-span-3 flex space-x-4 justify-end">
+      <div class="col-span-3 flex space-y-4 lg:space-y-0 space-x-4 justify-end">
         <!-- Sorting -->
         <div class="my-auto">
           <Menu as="div" class="relative z-10 inline-block text-left">
@@ -178,13 +183,14 @@
                     v-slot="{ active }"
                   >
                     <a
-                      :href="option.href"
+                      href="#"
                       :class="[
                         active ? 'bg-gray-100' : '',
                         'block px-4 py-2 text-sm font-medium text-gray-900',
                       ]"
+                      @click.prevent="filterAdd('sorting', option)"
                     >
-                      {{ option.name }}
+                      {{ option }}
                     </a>
                   </MenuItem>
                 </div>
@@ -222,7 +228,9 @@
             :key="filter.action"
           >
             <span class="text-sm text-gray-600">{{ filter.query }}</span>
-            <button class="ml-1"><XMarkIcon class="w-5 h-5" /></button>
+            <button class="ml-1" @click="removeFilter(filter.action)">
+              <XMarkIcon class="w-5 h-5" />
+            </button>
           </div>
         </div>
       </div>
@@ -242,14 +250,14 @@
             <div class="space-y-4">
               <div
                 v-for="role in rolesAvail"
-                :key="role.id"
+                :key="role"
                 class="flex items-center"
               >
                 <input
-                  :id="role.id"
+                  :id="role"
                   name="notification-method"
                   type="radio"
-                  :checked="role.id == selectedFilter.roles"
+                  :checked="role == selectedFilter.roles"
                   class="
                     focus:ring-indigo-500
                     h-4
@@ -257,13 +265,13 @@
                     text-indigo-600
                     border-gray-300
                   "
-                  @change.prevent="filterAdd('roles', role.title)"
+                  @change.prevent="filterAdd('roles', role)"
                 />
                 <label
-                  :for="role.id"
+                  :for="role"
                   class="ml-3 block text-sm font-medium text-gray-700"
                 >
-                  {{ role.title }}
+                  {{ role }}
                 </label>
               </div>
             </div>
@@ -517,19 +525,9 @@ const configPage = ref({
   limit: 2,
 });
 
-const sortOptions = [
-  { name: "Newest", href: "#" },
-  { name: "Name", href: "#" },
-  { name: "Title", href: "#" },
-  { name: "Email", href: "#" },
-  { name: "Role", href: "#" },
-];
+const sortOptions = ["name", "title", "email", "role"];
 
-const rolesAvail = [
-  { id: "team", title: "Team" },
-  { id: "member", title: "Member" },
-  { id: "admin", title: "Admin" },
-];
+const rolesAvail = ["team", "member", "admin"];
 
 const emit = defineEmits(["notifAction"]);
 
@@ -544,44 +542,72 @@ const selectedFilter = ref({
   sorting: "",
   roles: "",
 });
-const filterView = ref([
-  { action: "search", query: "john" },
-  { action: "sorting", query: "newest" },
-]);
+const filterView = ref([]);
 
 function filterAdd(action, query) {
-  if (action == "roles") {
+  const _key = Object.keys(selectedFilter.value).find((el) => el === action);
+
+  if (_key) {
     const findKey = filterFinder(action);
-    if (findKey) {
+    if (findKey !== false) {
       filterView.value[findKey]["query"] = query;
     } else {
       filterView.value.push({ action: action, query: query });
     }
 
-    selectedFilter.value.roles = query.toLowerCase();
+    selectedFilter.value[_key] = query;
+
+    getUsers();
   }
+}
+
+function removeFilter(action) {
+  const _key = Object.keys(selectedFilter.value).find((el) => el === action);
+
+  if (_key) {
+    const findKey = filterFinder(action);
+    if (findKey !== false) {
+      filterView.value.splice(findKey, 1);
+      selectedFilter.value[_key] = "";
+    }
+  }
+  getUsers();
 }
 
 function filterFinder(key) {
   if (filterView.value.length) {
-    const _finded = false;
     for (var x = 0; x < filterView.value.length; x++) {
       if (filterView.value[x]["action"] == key) {
         return x;
       }
     }
-    return _finded;
   }
+  return false;
 }
 
-function rolesSelected() {
-  const key = filterFinder("roles");
+function getUsers() {
+  const _query = {
+    _page: configPage.value.pages,
+    _limit: configPage.value.limit,
+    role: selectedFilter.value.roles,
+    _sort: selectedFilter.value.sorting,
+    q: selectedFilter.value.search,
+  };
 
-  if (key) {
-    return filterView.value[key]["query"];
-  }
+  const _key = [];
 
-  return "team";
+  Object.keys(_query).map((el) => {
+    if (_query[el] !== "") {
+      _key.push(el + "=" + _query[el]);
+    }
+  });
+
+  const queryBuilder = _key.join("&");
+
+  server.getUsers(queryBuilder).then((r) => {
+    users.value.total = parseInt(r.headers["x-total-count"]);
+    users.value.data = r.data;
+  });
 }
 
 function actionId(person, action) {
@@ -605,7 +631,9 @@ function notification(message) {
 
 function changePage(page) {
   configPage.value.pages = page;
-  refresh(page, configPage.value.limit);
+  console.log(page, configPage.value.pages);
+  // getUsers();
+  // refresh(page, configPage.value.limit);
 }
 
 function navAction(action) {
@@ -630,15 +658,14 @@ function refresh(page = 1, limit) {
 }
 
 onMounted(() => {
-  refresh();
+  getUsers();
 });
 
 watchEffect(() => {
   const limit = configPage.value.limit;
   if (limit) {
     configPage.value.limit = parseInt(limit);
-    refresh(1, limit);
-    configPage.value.pages = 1;
+    getUsers();
   }
 });
 </script>
