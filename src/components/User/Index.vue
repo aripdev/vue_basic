@@ -45,10 +45,7 @@
 
       <div class="col-start-2 col-span-2">
         <div class="flex-1 flex">
-          <form
-            class="w-full flex md:ml-0"
-            @submit.prevent="filterAdd('search', selectedFilter.search)"
-          >
+          <form class="w-full flex md:ml-0" @submit.prevent="getUsers">
             <label for="search-field" class="sr-only">Search</label>
             <div
               class="relative w-full text-gray-400 focus-within:text-gray-600"
@@ -91,7 +88,7 @@
               />
             </div>
             <button
-              type="button"
+              type="submit"
               class="
                 inline-flex
                 items-center
@@ -112,7 +109,6 @@
                 focus:ring-offset-2
                 focus:ring-indigo-500
               "
-              @click.prevent="filterAdd('search', selectedFilter.search)"
             >
               Find
             </button>
@@ -188,7 +184,7 @@
                         active ? 'bg-gray-100' : '',
                         'block px-4 py-2 text-sm font-medium text-gray-900',
                       ]"
-                      @click.prevent="filterAdd('sorting', option)"
+                      @click="selectedFilter.sorting = option"
                     >
                       {{ option }}
                     </a>
@@ -224,11 +220,13 @@
         <div class="flex gap-2">
           <div
             class="bg-gray-200 rounded-3xl py-1 px-2 flex content-baseline"
-            v-for="filter in filterView"
+            v-for="filter in filters"
             :key="filter.action"
           >
-            <span class="text-sm text-gray-600">{{ filter.query }}</span>
-            <button class="ml-1" @click="removeFilter(filter.action)">
+            <span class="text-sm text-gray-600">{{
+              filter.action + ":" + filter.query
+            }}</span>
+            <button class="ml-1" @click="selectedFilter[filter.action] = ''">
               <XMarkIcon class="w-5 h-5" />
             </button>
           </div>
@@ -257,7 +255,6 @@
                   :id="role"
                   name="notification-method"
                   type="radio"
-                  :checked="role == selectedFilter.roles"
                   class="
                     focus:ring-indigo-500
                     h-4
@@ -265,7 +262,8 @@
                     text-indigo-600
                     border-gray-300
                   "
-                  @change.prevent="filterAdd('roles', role)"
+                  v-model="selectedFilter.roles"
+                  :value="role"
                 />
                 <label
                   :for="role"
@@ -498,7 +496,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watchEffect } from "vue";
+import { onMounted, ref, watch } from "vue";
 import Modal from "../Layouts/Modal.vue";
 import UserCreate from "./Create.vue";
 import EditUser from "./Edit.vue";
@@ -514,76 +512,41 @@ import {
   MagnifyingGlassIcon,
   AdjustmentsHorizontalIcon,
 } from "@heroicons/vue/24/outline";
+import { computed } from "@vue/reactivity";
+
+// Variabel
 
 const users = ref({
   data: null,
   total: 0,
 });
 
+const selectedPerson = ref();
+
 const configPage = ref({
   pages: 1,
   limit: 2,
+});
+
+const selectedFilter = ref({
+  search: "",
+  sorting: "",
+  roles: "",
 });
 
 const sortOptions = ["name", "title", "email", "role"];
 
 const rolesAvail = ["team", "member", "admin"];
 
-const emit = defineEmits(["notifAction"]);
-
-const selectedPerson = ref();
 const listModal = ref({
   destroyUser: false,
   editUser: false,
   addUser: false,
 });
-const selectedFilter = ref({
-  search: "",
-  sorting: "",
-  roles: "",
-});
-const filterView = ref([]);
 
-function filterAdd(action, query) {
-  const _key = Object.keys(selectedFilter.value).find((el) => el === action);
+const emit = defineEmits(["notifAction"]);
 
-  if (_key) {
-    const findKey = filterFinder(action);
-    if (findKey !== false) {
-      filterView.value[findKey]["query"] = query;
-    } else {
-      filterView.value.push({ action: action, query: query });
-    }
-
-    selectedFilter.value[_key] = query;
-
-    getUsers();
-  }
-}
-
-function removeFilter(action) {
-  const _key = Object.keys(selectedFilter.value).find((el) => el === action);
-
-  if (_key) {
-    const findKey = filterFinder(action);
-    if (findKey !== false) {
-      filterView.value.splice(findKey, 1);
-      selectedFilter.value[_key] = "";
-    }
-  }
-  getUsers();
-}
-
-function filterFinder(key) {
-  if (filterView.value.length) {
-    for (var x = 0; x < filterView.value.length; x++) {
-      if (filterView.value[x]["action"] == key) {
-        return x;
-      }
-    }
-  }
-  return false;
-}
+// Function
 
 function getUsers() {
   const _query = {
@@ -610,6 +573,20 @@ function getUsers() {
   });
 }
 
+const filters = computed(() => {
+  const _key = Object.keys(selectedFilter.value);
+
+  const _view = [];
+
+  _key.forEach((el) => {
+    if (selectedFilter.value[el] !== "") {
+      _view.push({ action: el, query: selectedFilter.value[el] });
+    }
+  });
+
+  return _view;
+});
+
 function actionId(person, action) {
   selectedPerson.value = person;
   if (action == "delete") {
@@ -631,9 +608,7 @@ function notification(message) {
 
 function changePage(page) {
   configPage.value.pages = page;
-  console.log(page, configPage.value.pages);
-  // getUsers();
-  // refresh(page, configPage.value.limit);
+  getUsers();
 }
 
 function navAction(action) {
@@ -646,26 +621,27 @@ function navAction(action) {
 }
 
 function refreshAfterAction() {
-  refresh(1, configPage.value.limit);
   configPage.value.pages = 1;
+  getUsers();
 }
 
-function refresh(page = 1, limit) {
-  server.getAllUser(page, limit).then((r) => {
-    users.value.total = parseInt(r.headers["x-total-count"]);
-    users.value.data = r.data;
-  });
-}
+// Events
 
 onMounted(() => {
   getUsers();
 });
 
-watchEffect(() => {
-  const limit = configPage.value.limit;
-  if (limit) {
-    configPage.value.limit = parseInt(limit);
-    getUsers();
+watch(
+  () => configPage.value.limit,
+  (limit) => {
+    if (limit) {
+      configPage.value.pages = 1;
+      getUsers();
+    }
   }
+);
+
+watch(selectedFilter.value, () => {
+  getUsers();
 });
 </script>
