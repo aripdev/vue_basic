@@ -88,6 +88,7 @@
               />
             </div>
             <button
+              v-if="false"
               type="submit"
               class="
                 inline-flex
@@ -285,17 +286,28 @@
           shadow
           ring-1 ring-black ring-opacity-5
           sm:-mx-6
-          md:mx-0 md:rounded-lg
+          lg:mx-0
+          md:rounded-lg
           col-span-5
         "
       >
-        <div v-if="!users.total" class="my-12 md:my-0 h-full flex items-center">
+        <div
+          v-show="loading"
+          class="flex justify-center items-center h-40 lg:h-full w-full"
+        >
+          <LoaderData dimension="12"></LoaderData>
+        </div>
+
+        <div
+          v-if="!loading && !users.total"
+          class="my-12 md:my-0 h-full flex items-center"
+        >
           <div class="flex-col mx-auto text-center">
             <h1 class="font-bold text-gray-700 text-xl">No Results</h1>
             <p class="text-gray-500">Sorry, we are not found anything</p>
           </div>
         </div>
-        <div v-else>
+        <div v-if="!loading && users.total">
           <table class="min-w-full divide-y divide-gray-300">
             <thead class="bg-gray-50">
               <tr>
@@ -501,7 +513,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from "vue";
+import { inject, onMounted, ref, watch } from "vue";
 import Modal from "../Layouts/Modal.vue";
 import UserCreate from "./Create.vue";
 import EditUser from "./Edit.vue";
@@ -518,8 +530,11 @@ import {
   AdjustmentsHorizontalIcon,
 } from "@heroicons/vue/24/outline";
 import { computed } from "@vue/reactivity";
+import LoaderData from "../Layouts/LoaderData.vue";
 
 // Variabel
+
+const quickNote = inject("quickNote");
 
 const users = ref({
   data: null,
@@ -551,6 +566,8 @@ const listModal = ref({
 
 const emit = defineEmits(["notifAction"]);
 
+const loading = ref(false);
+
 // Function
 
 function getUsers() {
@@ -572,10 +589,19 @@ function getUsers() {
 
   const queryBuilder = _key.join("&");
 
-  server.getUsers(queryBuilder).then((r) => {
-    users.value.total = parseInt(r.headers["x-total-count"]);
-    users.value.data = r.data;
-  });
+  server
+    .getUsers(queryBuilder)
+    .then((r) => {
+      users.value.total = parseInt(r.headers["x-total-count"]);
+      users.value.data = r.data;
+      server.done();
+      loading.value = loading.value ? !loading.value : false;
+    })
+    .catch((er) => {
+      if (er.code == "ERR_NETWORK") {
+        quickNote.netErr();
+      }
+    });
 }
 
 const filters = computed(() => {
@@ -633,6 +659,7 @@ function refresh() {
 // Events
 
 onMounted(() => {
+  loading.value = true;
   getUsers();
 });
 

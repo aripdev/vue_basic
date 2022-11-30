@@ -1,5 +1,9 @@
 <template>
-  <form class="space-y-8 divide-y divide-gray-200" @submit.prevent="updateUser">
+  <form
+    ref="formEdit"
+    class="space-y-8 divide-y divide-gray-200"
+    @submit.prevent="updateUser"
+  >
     <div class="space-y-8 divide-y divide-gray-200 sm:space-y-5">
       <div class="pt-2 space-y-6 sm:pt-4 sm:space-y-5">
         <div>
@@ -198,29 +202,35 @@
             justify-center
             py-2
             px-4
-            border border-transparent
             shadow-sm
             text-sm
             font-medium
-            rounded-md
-            text-white
-            bg-indigo-600
-            hover:bg-indigo-700
             focus:outline-none
             focus:ring-2
             focus:ring-offset-2
             focus:ring-indigo-500
+            border
+            rounded-md
           "
+          :class="[
+            formLocked
+              ? 'bg-white border-gray-300 text-gray-700 focus:ring-0'
+              : ' hover:bg-indigo-700 bg-indigo-600 text-white ',
+          ]"
         >
-          Update
+          <LoaderData v-show="formLocked" class="mr-2"></LoaderData>
+          <span>Update</span>
         </button>
       </div>
     </div>
   </form>
 </template>
 <script setup>
-import { ref } from "vue";
+import { inject, onMounted, ref } from "vue";
 import server from "../../server";
+import LoaderData from "../Layouts/LoaderData.vue";
+
+const quickNote = inject("quickNote");
 
 const emit = defineEmits(["refresh", "modalAction", "notification"]);
 
@@ -238,13 +248,38 @@ const users = ref({
   role: props.person.role,
 });
 
+const formEdit = ref();
+
+const formLocked = ref(false);
+
+function locked(action) {
+  const form = formEdit.value;
+
+  formLocked.value = action;
+
+  for (var x = 0; x < form.length; x++) {
+    form[x].setAttribute("disabled", action);
+  }
+}
+
 function updateUser() {
-  server.updateUser(users.value).then((r) => {
-    if (r.status == 200) {
-      emit("modalAction", "editUser", false);
-      emit("refresh");
-      emit("notification", "User Updated");
-    }
-  });
+  locked(true);
+  server
+    .updateUser(users.value)
+    .then((r) => {
+      if (r.status == 200) {
+        locked(false);
+        emit("modalAction", "editUser", false);
+        emit("refresh");
+        emit("notification", "User Updated");
+        server.done();
+      }
+    })
+    .catch((er) => {
+      locked(false);
+      if (er.code == "ERR_NETWORK") {
+        quickNote.netErr();
+      }
+    });
 }
 </script>

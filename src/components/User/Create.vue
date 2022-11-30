@@ -1,5 +1,9 @@
 <template>
-  <form class="space-y-8 divide-y divide-gray-200" @submit.prevent="saveUser">
+  <form
+    ref="formAdd"
+    class="space-y-8 divide-y divide-gray-200"
+    @submit.prevent="saveUser"
+  >
     <div class="space-y-8 divide-y divide-gray-200 sm:space-y-5">
       <div class="pt-2 space-y-6 sm:pt-4 sm:space-y-5">
         <div>
@@ -198,29 +202,35 @@
             justify-center
             py-2
             px-4
-            border border-transparent
+            border
             shadow-sm
             text-sm
             font-medium
             rounded-md
-            text-white
-            bg-indigo-600
-            hover:bg-indigo-700
             focus:outline-none
             focus:ring-2
             focus:ring-offset-2
             focus:ring-indigo-500
           "
+          :class="[
+            formLocked
+              ? 'bg-white border-gray-300 text-gray-700 focus:ring-0'
+              : ' hover:bg-indigo-700 bg-indigo-600 text-white ',
+          ]"
         >
-          Save
+          <LoaderData v-show="formLocked" class="mr-2"></LoaderData>
+          <span>Save</span>
         </button>
       </div>
     </div>
   </form>
 </template>
 <script setup>
-import { ref } from "vue";
+import { inject, ref } from "vue";
 import server from "../../server";
+import LoaderData from "../Layouts/LoaderData.vue";
+
+const quickNote = inject("quickNote");
 
 const users = ref({
   name: "",
@@ -233,13 +243,38 @@ const roles = ref(["member", "team", "admin"]);
 
 const emit = defineEmits(["modalAction", "refresh", "notification"]);
 
+const formAdd = ref();
+
+const formLocked = ref(false);
+
+function locked(action) {
+  const form = formAdd.value;
+
+  formLocked.value = action;
+
+  for (var x = 0; x < form.length; x++) {
+    form[x].setAttribute("disabled", action);
+  }
+}
+
 function saveUser() {
-  server.addingUser(users.value).then((r) => {
-    if (r.status == 201) {
-      emit("modalAction", "addUser", false);
-      emit("refresh");
-      emit("notification", "Success add new user");
-    }
-  });
+  locked(true);
+  server
+    .addingUser(users.value)
+    .then((r) => {
+      if (r.status == 201) {
+        locked(false);
+        emit("modalAction", "addUser", false);
+        emit("refresh");
+        emit("notification", "Success add new user");
+        server.done();
+      }
+    })
+    .catch((er) => {
+      locked(false);
+      if (er.code == "ERR_NETWORK") {
+        quickNote.netErr();
+      }
+    });
 }
 </script>

@@ -89,7 +89,9 @@
 <script setup>
 import { DialogTitle } from "@headlessui/vue";
 import { ExclamationTriangleIcon } from "@heroicons/vue/24/outline";
+import { inject } from "vue";
 import server from "../../server";
+const quickNote = inject("quickNote");
 const emit = defineEmits(["refresh", "modalAction", "notification"]);
 const props = defineProps({
   person: Object,
@@ -97,9 +99,17 @@ const props = defineProps({
 
 function deleteUser() {
   emit("modalAction", "destroyUser", false);
-  server.deleteUser(props.person.id).then((r) => {
-    emit("notification", "User deleted");
-    emit("refresh");
-  });
+  server
+    .deleteUser(props.person.id)
+    .then((r) => {
+      emit("notification", "User deleted");
+      emit("refresh");
+      server.done();
+    })
+    .catch((er) => {
+      if (er.code == "ERR_NETWORK") {
+        quickNote.netErr();
+      }
+    });
 }
 </script>
