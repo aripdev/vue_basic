@@ -184,7 +184,7 @@
                         active ? 'bg-gray-100' : '',
                         'block px-4 py-2 text-sm font-medium text-gray-900',
                       ]"
-                      @click="selectedFilter.sorting = option"
+                      @click.prevent="selectedFilter.sorting = option"
                     >
                       {{ option }}
                     </a>
@@ -224,7 +224,7 @@
             :key="filter.action"
           >
             <span class="text-sm text-gray-600">{{
-              filter.action + ":" + filter.query
+              filter.action + ": " + filter.query
             }}</span>
             <button class="ml-1" @click="selectedFilter[filter.action] = ''">
               <XMarkIcon class="w-5 h-5" />
@@ -289,8 +289,13 @@
           col-span-5
         "
       >
-        <div v-if="users.data == null">User Empty</div>
-        <div v-if="users.data != null">
+        <div v-if="!users.total" class="my-12 md:my-0 h-full flex items-center">
+          <div class="flex-col mx-auto text-center">
+            <h1 class="font-bold text-gray-700 text-xl">No Results</h1>
+            <p class="text-gray-500">Sorry, we are not found anything</p>
+          </div>
+        </div>
+        <div v-else>
           <table class="min-w-full divide-y divide-gray-300">
             <thead class="bg-gray-50">
               <tr>
@@ -454,7 +459,7 @@
     <Modal @modalAction="modalAction" name="addUser" :open="listModal.addUser">
       <template #body>
         <UserCreate
-          @refresh="refreshAfterAction"
+          @refresh="refresh"
           @modalAction="modalAction"
           @notification="notification"
         ></UserCreate>
@@ -471,7 +476,7 @@
         <DestroyUser
           :person="selectedPerson"
           @modalAction="modalAction"
-          @refresh="refreshAfterAction"
+          @refresh="refresh"
           @notification="notification"
         ></DestroyUser>
       </template>
@@ -487,7 +492,7 @@
         <EditUser
           :person="selectedPerson"
           @modalAction="modalAction"
-          @refresh="refreshAfterAction"
+          @refresh="refresh"
           @notification="notification"
         ></EditUser>
       </template>
@@ -620,7 +625,7 @@ function navAction(action) {
   changePage(_page);
 }
 
-function refreshAfterAction() {
+function refresh() {
   configPage.value.pages = 1;
   getUsers();
 }
@@ -631,17 +636,7 @@ onMounted(() => {
   getUsers();
 });
 
-watch(
-  () => configPage.value.limit,
-  (limit) => {
-    if (limit) {
-      configPage.value.pages = 1;
-      getUsers();
-    }
-  }
-);
-
-watch(selectedFilter.value, () => {
-  getUsers();
+watch([() => configPage.value.limit, selectedFilter.value], () => {
+  refresh();
 });
 </script>
