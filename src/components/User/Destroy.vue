@@ -104,12 +104,14 @@ function deleteUser() {
     .then((r) => {
       emit("notification", "User deleted");
       emit("refresh");
-      server.done();
     })
     .catch((er) => {
       if (er.code == "ERR_NETWORK") {
         quickNote.netErr();
       }
+    })
+    .finally(() => {
+      server.done();
     });
 }
 </script>

@@ -29,7 +29,7 @@
             </label>
             <div class="mt-1 sm:mt-0 sm:col-span-2">
               <input
-                v-model="users.name"
+                v-model.trim="users.name"
                 type="text"
                 name="first-name"
                 id="first-name"
@@ -44,7 +44,12 @@
                   border-gray-300
                   rounded-md
                 "
+                :class="{ 'border-red-500': errorForm && errorForm['name'] }"
+                required
               />
+              <span v-if="errorForm" class="text-xs text-red-500">{{
+                errorForm["name"]
+              }}</span>
             </div>
           </div>
 
@@ -67,7 +72,7 @@
             </label>
             <div class="mt-1 sm:mt-0 sm:col-span-2">
               <input
-                v-model="users.title"
+                v-model.trim="users.title"
                 type="text"
                 name="last-name"
                 id="last-name"
@@ -82,7 +87,12 @@
                   border-gray-300
                   rounded-md
                 "
+                :class="{ 'border-red-500': errorForm && errorForm['title'] }"
+                required
               />
+              <span v-if="errorForm" class="text-xs text-red-500">{{
+                errorForm["title"]
+              }}</span>
             </div>
           </div>
 
@@ -105,7 +115,7 @@
             </label>
             <div class="mt-1 sm:mt-0 sm:col-span-2">
               <input
-                v-model="users.email"
+                v-model.trim="users.email"
                 id="email"
                 name="email"
                 type="email"
@@ -120,7 +130,12 @@
                   border-gray-300
                   rounded-md
                 "
+                :class="{ 'border-red-500': errorForm && errorForm['email'] }"
+                required
               />
+              <span v-if="errorForm" class="text-xs text-red-500">{{
+                errorForm["email"]
+              }}</span>
             </div>
           </div>
 
@@ -143,7 +158,7 @@
             </label>
             <div class="mt-1 sm:mt-0 sm:col-span-2">
               <select
-                v-model="users.role"
+                v-model.trim="users.role"
                 id="country"
                 name="country"
                 autocomplete="country-name"
@@ -157,6 +172,7 @@
                   border-gray-300
                   rounded-md
                 "
+                required
               >
                 <option v-for="role in roles" :key="role" :value="role">
                   {{ role }}
@@ -229,6 +245,7 @@
 import { inject, onMounted, ref } from "vue";
 import server from "../../server";
 import LoaderData from "../Layouts/LoaderData.vue";
+import validation from "../../lib/validation";
 
 const quickNote = inject("quickNote");
 
@@ -252,6 +269,15 @@ const formEdit = ref();
 
 const formLocked = ref(false);
 
+const validationForm = ref({
+  name: "required|alpha_space|min:3|max:50",
+  title: "required|alpha_space|min:3|max:50",
+  email: "required|email|min:3|max:50",
+  role: "required|alpha|min:4:max:50",
+});
+
+const errorForm = ref(null);
+
 function locked(action) {
   const form = formEdit.value;
 
@@ -263,23 +289,34 @@ function locked(action) {
 }
 
 function updateUser() {
-  locked(true);
-  server
-    .updateUser(users.value)
-    .then((r) => {
-      if (r.status == 200) {
+  const checkValidation = validation.sanitize(
+    users.value,
+    validationForm.value
+  );
+
+  if (checkValidation !== true) {
+    errorForm.value = checkValidation;
+  } else {
+    errorForm.value = null;
+    locked(true);
+    server
+      .updateUser(users.value)
+      .then((r) => {
+        if (r.status == 200) {
+          emit("modalAction", "editUser", false);
+          emit("refresh");
+          emit("notification", "User Updated");
+        }
+      })
+      .catch((er) => {
+        if (er.code == "ERR_NETWORK") {
+          quickNote.netErr();
+        }
+      })
+      .finally(() => {
         locked(false);
-        emit("modalAction", "editUser", false);
-        emit("refresh");
-        emit("notification", "User Updated");
         server.done();
-      }
-    })
-    .catch((er) => {
-      locked(false);
-      if (er.code == "ERR_NETWORK") {
-        quickNote.netErr();
-      }
-    });
+      });
+  }
 }
 </script>

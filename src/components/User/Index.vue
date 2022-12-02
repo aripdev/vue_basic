@@ -84,7 +84,7 @@
                 placeholder="Search"
                 type="search"
                 name="search"
-                v-model="selectedFilter.search"
+                v-model.trim="selectedFilter.search"
               />
             </div>
             <button
@@ -198,7 +198,7 @@
         <!-- Limits -->
         <div>
           <select
-            v-model="configPage.limit"
+            v-model.trim="configPage.limit"
             class="
               block
               focus:ring-indigo-500 focus:border-indigo-500
@@ -263,7 +263,7 @@
                     text-indigo-600
                     border-gray-300
                   "
-                  v-model="selectedFilter.roles"
+                  v-model.trim="selectedFilter.roles"
                   :value="role"
                 />
                 <label
@@ -594,13 +594,15 @@ function getUsers() {
     .then((r) => {
       users.value.total = parseInt(r.headers["x-total-count"]);
       users.value.data = r.data;
-      server.done();
       loading.value = loading.value ? !loading.value : false;
     })
     .catch((er) => {
       if (er.code == "ERR_NETWORK") {
         quickNote.netErr();
       }
+    })
+    .finally(() => {
+      server.done();
     });
 }
 

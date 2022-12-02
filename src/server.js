@@ -8,12 +8,7 @@ const apiClient = axios.create({
     }
 });
 
-
 export default {
-    getAllUser(page = 1, limit = 2) {
-        NProgress.start();
-        return apiClient.get(`users?_page=${page}&_limit=${limit}`)
-    },
     getUsers(query) {
         NProgress.start();
         return apiClient.get(`users?${query}`);
@@ -29,7 +24,8 @@ export default {
     updateUser(data) {
         NProgress.start();
         return apiClient.patch(`users/${data.id}`, data)
-    }, done() {
+    },
+    done() {
         NProgress.done();
     }
 }
