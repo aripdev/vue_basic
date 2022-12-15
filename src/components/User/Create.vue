@@ -245,13 +245,6 @@ import validation from "../../lib/validation";
 
 const quickNote = inject("quickNote");
 
-const users = ref({
-  name: "",
-  title: "",
-  email: "",
-  role: "member",
-});
-
 const roles = ref(["member", "team", "admin"]);
 
 const emit = defineEmits(["modalAction", "refresh", "notification"]);
@@ -260,11 +253,18 @@ const formAdd = ref();
 
 const formLocked = ref(false);
 
-const validationForm = ref({
+const users = ref({
+  name: "",
+  title: "",
+  email: "",
+  role: "member",
+});
+
+const rules = ref({
   name: "required|alpha_space|min:3|max:50",
   title: "required|alpha_space|min:3|max:50",
   email: "required|email|min:3|max:50",
-  role: "required|alpha|min:4:max:50",
+  role: "required|alpha|min:2:max:50",
 });
 
 const errorForm = ref(null);
@@ -280,12 +280,9 @@ function locked(action) {
 }
 
 function saveUser() {
-  const checkValidation = validation.sanitize(
-    users.value,
-    validationForm.value
-  );
+  const checkValidation = validation.sanitize(users.value, rules.value);
 
-  if (checkValidation !== true) {
+  if (Object.keys(checkValidation).length) {
     errorForm.value = checkValidation;
   } else {
     errorForm.value = null;

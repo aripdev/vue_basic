@@ -243,15 +243,19 @@ import server from "../../server";
 import LoaderData from "../Layouts/LoaderData.vue";
 import validation from "../../lib/validation";
 
-const quickNote = inject("quickNote");
-
-const emit = defineEmits(["refresh", "modalAction", "notification"]);
-
 const props = defineProps({
   person: Object,
 });
 
+const quickNote = inject("quickNote");
+
+const emit = defineEmits(["refresh", "modalAction", "notification"]);
+
 const roles = ref(["member", "team", "admin"]);
+
+const formEdit = ref();
+
+const formLocked = ref(false);
 
 const users = ref({
   id: props.person.id,
@@ -261,15 +265,11 @@ const users = ref({
   role: props.person.role,
 });
 
-const formEdit = ref();
-
-const formLocked = ref(false);
-
 const validationForm = ref({
   name: "required|alpha_space|min:3|max:50",
   title: "required|alpha_space|min:3|max:50",
   email: "required|email|min:3|max:50",
-  role: "required|alpha|min:4:max:50",
+  role: "required|alpha|min:2:max:50",
 });
 
 const errorForm = ref(null);
@@ -290,7 +290,7 @@ function updateUser() {
     validationForm.value
   );
 
-  if (checkValidation !== true) {
+  if (Object.keys(checkValidation).length) {
     errorForm.value = checkValidation;
   } else {
     errorForm.value = null;

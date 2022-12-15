@@ -1,20 +1,24 @@
 const validator = {
-    required: function (word) { return word == "" ? "field required" : true; },
+    required: function (word) { return word == "" ? "field required" : ""; },
     min: function (word, length) {
-        return word.length > length ? true : `word to short, minimum ${length}`
+        return word.length > length ? "" : `word to short, minimum ${length}`
     },
     max: function (word, length) {
-        return word.length < length ? true : `word to long, maximum ${length}`
+        return word.length < length ? "" : `word to long, maximum ${length}`
     },
     alpha: function (word) {
-        return (new RegExp(/^[A-Za-z]+$/).test(word)) ? true : 'only alphabet'
+        return (new RegExp(/^[A-Za-z]+$/).test(word)) ? "" : 'only alphabet'
     },
     alpha_space: function (word) {
 
-        return (new RegExp(/^[A-Za-z\s]+$/).test(word)) ? true : 'only alphabet and space only'
+        return (new RegExp(/^[A-Za-z\s]+$/).test(word))
+            ? ""
+            : 'only alphabet and space only'
     },
     email: function (word) {
-        return (new RegExp(/^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/).test(word)) ? true : 'please provide valid email'
+        return (new RegExp(/^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/).test(word))
+            ? ""
+            : 'please provide valid email'
     }
 };
 
@@ -50,11 +54,9 @@ function validate(data, rules) {
             _object[_keyRules[x]] = `field ${_keyRules[x]} not found`;
             _error.push(_object)
         }
-
     }
 
-    return !_error.length ? true : _error;
-
+    return _error;
 
 }
 
@@ -72,14 +74,14 @@ function validating(rules, word) {
 
             var _result = validator[_nameRule[0]](word)
 
-            if (_result !== true) {
+            if (!!_result) {
                 _errors = _result; break
             }
 
         } else {
             _result = validator[_nameRule[0]](word, _nameRule[1])
 
-            if (_result !== true) {
+            if (!!_result) {
 
                 _errors = _result; break
             }
@@ -95,7 +97,7 @@ export default {
 
         const _resultError = {};
 
-        if (_resultFromValidation !== true && _resultFromValidation.length) {
+        if (_resultFromValidation.length) {
 
             _resultFromValidation.forEach(el => {
 
@@ -105,7 +107,7 @@ export default {
             })
         }
 
-        return Object.keys(_resultError).length ? _resultError : true;
+        return _resultError;
 
     }
 }
