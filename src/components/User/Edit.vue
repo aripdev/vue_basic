@@ -45,7 +45,6 @@
                   rounded-md
                 "
                 :class="{ 'border-red-500': errorForm && errorForm['name'] }"
-                required
               />
               <span v-if="errorForm" class="text-xs text-red-500">{{
                 errorForm["name"]
@@ -88,7 +87,6 @@
                   rounded-md
                 "
                 :class="{ 'border-red-500': errorForm && errorForm['title'] }"
-                required
               />
               <span v-if="errorForm" class="text-xs text-red-500">{{
                 errorForm["title"]
@@ -118,7 +116,7 @@
                 v-model.trim="users.email"
                 id="email"
                 name="email"
-                type="email"
+                type="text"
                 autocomplete="email"
                 class="
                   block
@@ -131,7 +129,6 @@
                   rounded-md
                 "
                 :class="{ 'border-red-500': errorForm && errorForm['email'] }"
-                required
               />
               <span v-if="errorForm" class="text-xs text-red-500">{{
                 errorForm["email"]
@@ -172,7 +169,6 @@
                   border-gray-300
                   rounded-md
                 "
-                required
               >
                 <option v-for="role in roles" :key="role" :value="role">
                   {{ role }}
