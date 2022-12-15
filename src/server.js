@@ -9,21 +9,21 @@ const apiClient = axios.create({
 });
 
 export default {
-    getUsers(query) {
+    async getUsers(query) {
         NProgress.start();
-        return apiClient.get(`users?${query}`);
+        return await apiClient.get(`users?${query}`);
     },
-    addingUser(data) {
+    async addingUser(data) {
         NProgress.start();
-        return apiClient.post('users', data)
+        return await apiClient.post('users', data)
     },
-    deleteUser(id) {
+    async deleteUser(id) {
         NProgress.start();
-        return apiClient.delete(`users/${id}`)
+        return await apiClient.delete(`users/${id}`)
     },
-    updateUser(data) {
+    async updateUser(data) {
         NProgress.start();
-        return apiClient.patch(`users/${data.id}`, data)
+        return await apiClient.patch(`users/${data.id}`, data)
     },
     done() {
         NProgress.done();
