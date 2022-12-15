@@ -1,6 +1,10 @@
 # Managing User with Vue 3 + Tailwind
 > Notes : currently i'm using `json-server` run on port 3000 for mocking server, if you have active server edit file `server.js` 
 
+## Demo
+
+https://vue-basic.vercel.app/
+
 ## Install
 
 `npm install `
