@@ -98,12 +98,14 @@ const props = defineProps({
 });
 
 function deleteUser() {
-  emit("modalAction", "destroyUser", false);
   server
     .deleteUser(props.person.id)
     .then((r) => {
-      emit("notification", "User deleted");
-      emit("refresh");
+      if (r.status == 201) {
+        emit("modalAction", "destroyUser", false);
+        emit("notification", "User deleted");
+        emit("refresh");
+      }
     })
     .catch((er) => {
       if (er.code == "ERR_NETWORK") {

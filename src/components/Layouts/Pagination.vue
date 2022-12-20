@@ -266,7 +266,10 @@ watchEffect(() => {
     const _numPages = configuration.value.numPages;
 
     configuration.value.next =
-      _numPages.length == 1 ? false : _numPages.length != current;
+      props.current * parseInt(props.limit) >= props.total ||
+      _numPages.length == 1
+        ? false
+        : true;
   }
 });
 </script>

@@ -593,7 +593,7 @@ function getUsers() {
     .getUsers(queryBuilder)
     .then((r) => {
       users.value.total = parseInt(r.headers["x-total-count"]);
-      users.value.data = r.data;
+      users.value.data = r.data["data"];
       loading.value = loading.value ? !loading.value : false;
     })
     .catch((er) => {

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import NProgress from 'nprogress';
 const apiClient = axios.create({
-    baseURL: 'https://my-json-server.typicode.com/aripdev/demo',
+    baseURL: 'https://rbthemes.com/api/',
     headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json'
@@ -9,21 +9,21 @@ const apiClient = axios.create({
 });
 
 export default {
-    async getUsers(query) {
+    getUsers(query) {
         NProgress.start();
-        return await apiClient.get(`users?${query}`);
+        return apiClient.get(`users?${query}`);
     },
-    async addingUser(data) {
+    addingUser(data) {
         NProgress.start();
-        return await apiClient.post('users', data)
+        return apiClient.post('users', data)
     },
-    async deleteUser(id) {
+    deleteUser(id) {
         NProgress.start();
-        return await apiClient.delete(`users/${id}`)
+        return apiClient.delete(`users/${id}`)
     },
-    async updateUser(data) {
+    updateUser(data) {
         NProgress.start();
-        return await apiClient.patch(`users/${data.id}`, data)
+        return apiClient.patch(`users/${data.id}`, data)
     },
     done() {
         NProgress.done();
