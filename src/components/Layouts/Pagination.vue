@@ -79,7 +79,7 @@
           {{ " " }}
           of
           {{ " " }}
-          <span class="font-medium">{{ props.total }}</span>
+          <span class="font-medium">{{ parseInt(props.total) }}</span>
           {{ " " }}
           results
         </p>
@@ -125,7 +125,7 @@
               aria-current="page"
               :class="{
                 'z-10 bg-indigo-50 border-indigo-500 text-indigo-600':
-                  pages == props.current,
+                  pages == parseInt(props.current),
               }"
               class="
                 relative
@@ -217,13 +217,15 @@ function loadShowNumberConfiguration() {
 
   const _current = parseInt(props.current);
 
-  infoPages.value.start = _current > 1 ? (_current - 1) * props.limit + 1 : 1;
+  infoPages.value.start =
+    _current > 1 ? (_current - 1) * parseInt(props.limit) + 1 : 1;
 
   // Define showing to number
 
-  const _startPage = parseInt(infoPages.value.start - 1 + props.limit);
+  const _startPage = infoPages.value.start - 1 + parseInt(props.limit);
 
-  infoPages.value.end = props.total > _startPage ? _startPage : props.total;
+  infoPages.value.end =
+    parseInt(props.total) > _startPage ? _startPage : parseInt(props.total);
 }
 
 function doPaging(current, { range, pages, start = 1 }) {
@@ -243,9 +245,9 @@ function doPaging(current, { range, pages, start = 1 }) {
 }
 
 function setPagination() {
-  configuration.value.numPages = doPaging(props.current, {
+  configuration.value.numPages = doPaging(parseInt(props.current), {
     range: configuration.value.range,
-    pages: Math.ceil(props.total / props.limit),
+    pages: Math.ceil(parseInt(props.total) / parseInt(props.limit)),
   });
 }
 
@@ -254,7 +256,7 @@ function changePage(page) {
 }
 
 watchEffect(() => {
-  const current = props.current;
+  const current = parseInt(props.current);
 
   if (current) {
     loadShowNumberConfiguration();
@@ -266,8 +268,8 @@ watchEffect(() => {
     const _numPages = configuration.value.numPages;
 
     configuration.value.next =
-      props.current * parseInt(props.limit) >= props.total ||
-      _numPages.length == 1
+      parseInt(props.current) * parseInt(props.limit) >=
+        parseInt(props.total) || _numPages.length == 1
         ? false
         : true;
   }
