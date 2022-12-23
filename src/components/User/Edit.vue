@@ -298,7 +298,7 @@ function updateUser() {
     server
       .updateUser(users.value)
       .then((r) => {
-        if (r.status == 201) {
+        if (r.status == 204) {
           emit("modalAction", "editUser", false);
           emit("refresh");
           emit("notification", "User Updated");

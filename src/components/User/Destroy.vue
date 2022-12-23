@@ -101,7 +101,7 @@ function deleteUser() {
   server
     .deleteUser(props.person.id)
     .then((r) => {
-      if (r.status == 201) {
+      if (r.status == 204) {
         emit("modalAction", "destroyUser", false);
         emit("notification", "User deleted");
         emit("refresh");
